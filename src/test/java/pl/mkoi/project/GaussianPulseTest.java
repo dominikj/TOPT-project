@@ -1,16 +1,19 @@
 package pl.mkoi.project;
 
-import org.apache.commons.math3.util.Precision;
+import com.google.common.collect.ImmutableList;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
+import pl.topt.project.data.ArgumentRange;
 import pl.topt.project.data.GaussianPulse;
+
+import java.util.List;
 
 import static org.junit.Assert.assertTrue;
 
 @RunWith(MockitoJUnitRunner.class)
-public class PulsesTest {
-    double[] gaussianFunction = {
+public class GaussianPulseTest extends PulseTest {
+    private final List<Double> gaussianPulseReference = ImmutableList.of(
             0.011108996538242, 0.011793579567951, 0.012515342341224, 0.013275965284957, 0.014077183271575, 0.014920786069068,
             0.015808618705242, 0.016742581740099, 0.017724631440178, 0.018756779848581, 0.019841094744370, 0.020979699484926,
             0.022174772724855, 0.023428548005008, 0.024743313205154, 0.026121409853918, 0.027565232289593, 0.029077226665547,
@@ -60,16 +63,16 @@ public class PulsesTest {
             0.041785746099929, 0.039723989669419, 0.037748860091299, 0.035857590676414, 0.034047454734599, 0.032315767822159,
             0.030659889794007, 0.029077226665547, 0.027565232289593, 0.026121409853918, 0.024743313205154, 0.023428548005008,
             0.022174772724855, 0.020979699484926, 0.019841094744370, 0.018756779848581, 0.017724631440178, 0.016742581740099,
-            0.015808618705242, 0.014920786069068, 0.014077183271575, 0.013275965284957, 0.012515342341224, 0.011793579567951};
+            0.015808618705242, 0.014920786069068, 0.014077183271575, 0.013275965284957, 0.012515342341224, 0.011793579567951);
 
     @Test
     public void testGaussianFunction() {
-        GaussianPulse gaussianPulse = GaussianPulse.createGaussianPulse(3, 0.5);
-        double[] values = gaussianPulse.getValuesForArgumentRange(1.5, 4.5, 0.01);
-        for (int i = 0; i < values.length; ++i) {
-            assertTrue(String.format("Gaussian function value error: %s %s", Precision.round(values[i], 10) ,Precision.round( gaussianFunction[i],10)),
-                    Precision.round(values[i], 10) == Precision.round(gaussianFunction[i],10));
-        }
+        GaussianPulse gaussianPulse = GaussianPulse.createGaussianPulseForExpectedValueAndStandardDeviation(3, 0.5);
+        ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(1.5, 4.5, 0.01);
+        List<Double> values = gaussianPulse.getValuesForArgumentRange(arguments);
 
+        assertTrue(roundValues(values).equals(roundValues(gaussianPulseReference)));
     }
+
+
 }

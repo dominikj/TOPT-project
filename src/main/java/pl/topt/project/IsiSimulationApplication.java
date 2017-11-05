@@ -8,14 +8,14 @@ import org.springframework.context.annotation.ComponentScan;
 
 @SpringBootApplication
 @ComponentScan
-public class DigitalSignatureApplication extends SpringBootServletInitializer {
+public class IsiSimulationApplication extends SpringBootServletInitializer {
 
     @Override
     protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-        return application.sources(DigitalSignatureApplication.class);
+        return application.sources(IsiSimulationApplication.class);
     }
 
     public static void main(String[] args) throws Exception {
-        SpringApplication.run(DigitalSignatureApplication.class, args);
+        SpringApplication.run(IsiSimulationApplication.class, args);
     }
 }

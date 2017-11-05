@@ -1,7 +1,9 @@
 package pl.topt.project.data;
 
-/**
- * Created by dominik on 22.10.17.
- */
+
+import java.util.List;
+
 public interface Pulse {
+
+    List<Double> getValuesForArgumentRange(ArgumentRange argumentRange);
 }

@@ -52,8 +52,11 @@ window.onload = function() {
 $(document).ready(function() {
   $("#show-signal").click(function() {
     $.ajax({
-      url: "/figure/" + $("#pulseType").val(),
+      method: "POST",
+      url: "/simulate",
       dataType: 'json',
+      contentType: "application/json",
+      data: $("#simulationParameters").serializeJSON(),
       success: function(data) {
         $ARGUMENTS = data.arguments;
         $VALUES = data.values;
@@ -62,5 +65,31 @@ $(document).ready(function() {
         window.myLine.update();
       }
     });
+  });
+
+  $("#generate-binary-sequence").click(function() {
+    $.ajax({
+      url: "/binary-sequence/new",
+      dataType: 'json',
+      success: function(data) {
+        $("#binary-sequence").empty();
+        $.each(data.binarySequence, function(index, bit) {
+          $("#binary-sequence").append(function(bitToConvert) {
+            if (bitToConvert) {
+              return "1&nbsp;"
+            }
+            return "0&nbsp;"
+          }(bit));
+        });
+      }
+    });
+  });
+
+  $("#addNoise").click(function() {
+    if ($("#noiseSNR").attr("disabled")) {
+      $("#noiseSNR").attr("disabled", false)
+    } else {
+      $("#noiseSNR").attr("disabled", true)
+    }
   });
 });

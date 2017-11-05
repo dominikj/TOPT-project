@@ -1,36 +1,40 @@
 package pl.topt.project.data;
 
+import org.apache.commons.math3.analysis.function.Sinc;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
 import static java.lang.Math.pow;
 
 /**
  * Created by dominik on 24.10.17.
  */
-public class LorentzianPulse implements Pulse {
+public class RaisedCosinePulse implements Pulse {
 
-    private double halfOfThePeakWidth;
-    private double mean; //theta zero
+    private double bandwidth;
+    private double mean;
+    private Sinc sincFunction;
 
-    private LorentzianPulse(double halfOfThePeakWidth, double mean) {
-        this.halfOfThePeakWidth = halfOfThePeakWidth;
+    private RaisedCosinePulse(double bandwidth, double mean) {
+        this.bandwidth = bandwidth;
         this.mean = mean;
+        sincFunction = new Sinc();
     }
 
-    public static LorentzianPulse createLorentzianPulse(double halfOfThePeakWidth, double mean) {
-        return new LorentzianPulse(halfOfThePeakWidth, mean);
+    public static RaisedCosinePulse createRaisedCosinePulseForBandwidthAndMean(double bandwidth, double mean) {
+        return new RaisedCosinePulse(bandwidth, mean);
     }
 
     @Override
-    public double[] getValuesForArgumentRange(double min, double max, double step) {
-        int numberOfElements = (int) ((max - min) / step);
-        double[] values = new double[numberOfElements];
-        for (int i = 0; i < numberOfElements; ++i) {
-            values[i] = value(min + i * step);
-        }
-        return values;
+    public List<Double> getValuesForArgumentRange(ArgumentRange argumentRange) {
+        List<Double> arguments = argumentRange.getArguments();
+
+        return arguments.stream().map(this::value).collect(Collectors.toList());
     }
 
     private double value(double argument) {
-        double doublePowWidth = pow(halfOfThePeakWidth, 2);
-        return doublePowWidth / (doublePowWidth + pow(argument - mean, 2));
+        double sinc = sincFunction.value((4 * bandwidth * (argument - mean)) * Math.PI);
+        return sinc / (1 - 16 * pow(bandwidth, 2) * pow((argument - mean), 2));
     }
 }
