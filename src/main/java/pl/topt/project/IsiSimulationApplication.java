@@ -10,12 +10,12 @@ import org.springframework.context.annotation.ComponentScan;
 @ComponentScan
 public class DigitalSignatureApplication extends SpringBootServletInitializer {
 
-  @Override
-  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-    return application.sources(DigitalSignatureApplication.class);
-  }
+    @Override
+    protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
+        return application.sources(DigitalSignatureApplication.class);
+    }
 
-  public static void main(String[] args) throws Exception {
-    SpringApplication.run(DigitalSignatureApplication.class, args);
-  }
+    public static void main(String[] args) throws Exception {
+        SpringApplication.run(DigitalSignatureApplication.class, args);
+    }
 }
