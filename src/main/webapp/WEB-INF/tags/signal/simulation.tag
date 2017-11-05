@@ -15,7 +15,7 @@
   <canvas id="canvas"></canvas>
 </div>
 <div>
-  Binary sequence: <b><i>(You see only 5 first bits from 100 used to simulation)</i></b><br/>
+  Binary sequence: <b><i>(You see only 5 first bits from ${bitsNumber} used to simulation)</i></b><br/>
   <b id="binary-sequence">
 <c:forEach items="${binaryDataToShow.binarySequence}" var="bit">
   <c:choose>
@@ -24,7 +24,7 @@
   </c:choose>
 </c:forEach>
   </b> (...) <br />
-  <button type="button" id="generate-binary-sequence">Generate new 100 bits sequence</button>
+  <button type="button" id="generate-binary-sequence">Generate new ${bitsNumber} bits sequence</button>
 </div>
 <form:form method="POST" id="simulationParameters" action="#" modelAttribute="simulationParameters">
   <form:label path="pulseType">Pulse type:</form:label>

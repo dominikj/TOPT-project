@@ -81,4 +81,10 @@ public class MainPageController {
         reducedBinaryData.setBinarySequence(binaryData.getBinarySequence().subList(0, BITS_TO_SHOW));
         return reducedBinaryData;
     }
+
+    @ModelAttribute("bitsNumber")
+    public int addBitsNumber() {
+        return Integer.parseInt(environment.getProperty(SIMULATION_BINARY_SEQUENCE_SIZE_KEY));
+
+    }
 }
