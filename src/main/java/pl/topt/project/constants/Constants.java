@@ -11,8 +11,21 @@ public class Constants {
     }
 
     public interface PulseArgument {
-        Double MIN = 0D;
-        Double MAX = 10D;
-        Double STEP = 0.1;
+        double STEP = 0.2;
+
+        interface CleanPulse {
+            double MIN = 0D;
+            double MAX = 10D;
+        }
+
+        interface InterferedPulse {
+            double ISI_RATE = 3;
+            double MIN = CleanPulse.MIN;
+            double MAX = CleanPulse.MAX * ISI_RATE;
+        }
+    }
+
+    public interface WebConstants {
+        int BITS_TO_SHOW = 5;
     }
 }

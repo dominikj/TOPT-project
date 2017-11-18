@@ -8,6 +8,15 @@ import java.util.List;
 public class Signal {
     private List<Double> values;
     private List<Double> arguments;
+    private boolean withIsi;
+
+    public boolean isWithIsi() {
+        return withIsi;
+    }
+
+    public void setWithIsi(boolean withIsi) {
+        this.withIsi = withIsi;
+    }
 
     public Signal() {
     }

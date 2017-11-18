@@ -4,13 +4,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import pl.topt.project.constants.Constants;
+import pl.topt.project.constants.Constants.PulseArgument;
+import pl.topt.project.constants.Constants.PulseArgument.InterferedPulse;
 import pl.topt.project.data.*;
 import pl.topt.project.forms.SimulationParametersForm;
 import pl.topt.project.utils.SignalUtils;
 
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static pl.topt.project.constants.Constants.WebConstants.BITS_TO_SHOW;
 
 /**
  * Created by dominik on 30.10.17.
@@ -23,33 +30,35 @@ public class SignalGeneratorService {
         Random random = new Random();
         BinaryData binaryData = new BinaryData();
         List<Boolean> binarySequence = new ArrayList<>(bits);
+        ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(
+                InterferedPulse.MIN, InterferedPulse.MAX, PulseArgument.STEP);
 
         for (int i = 0; i < bits; ++i) {
             binarySequence.add(random.nextBoolean());
         }
 
         binaryData.setBinarySequence(binarySequence);
+        Signal signalData = generateSignalData(new RectangularPulse().getValuesForArgumentRange(arguments, false),
+                arguments, binarySequence.subList(0, BITS_TO_SHOW));
+        binaryData.setBinarySignal(signalData);
         return binaryData;
     }
 
     public Signal generateSignal(BinaryData binaryData, SimulationParametersForm parametersForm) {
 
-        Constants.PulseType pulseType = parametersForm.getPulseType();
         Signal signal;
+        Pulse pulse = createPulse(parametersForm.getPulseType(), parametersForm.getIsiRate());
+        ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(
+                InterferedPulse.MIN, InterferedPulse.MAX, PulseArgument.STEP);
+        signal = generateSignalData(pulse.getValuesForArgumentRange(arguments, true),
+                arguments, binaryData.getBinarySequence());
 
-        if (Constants.PulseType.GAUSSIAN.equals(pulseType)) {
-            signal = generateGaussianBinarySignal(binaryData);
-        } else if (Constants.PulseType.LORENTZIAN.equals(pulseType)) {
-            signal = generateLorentzianBinarySignal(binaryData);
-        } else if (Constants.PulseType.RAISED_COSINE.equals(pulseType)) {
-            signal = generateRaisedCosineBinarySignal(binaryData);
-        } else {
-            throw new IllegalArgumentException();
-        }
 
         if (parametersForm.isAddNoise()) {
             signal = addNoiseToSignalWithSNR(signal, parametersForm.getNoiseSNR());
         }
+
+        LOGGER.info("Pulse width: {}", SignalUtils.calculatePulseWidth(signal));
 
         return signal;
     }
@@ -91,57 +100,50 @@ public class SignalGeneratorService {
         return gaussianNoiseValues;
     }
 
-    private Signal generateGaussianBinarySignal(BinaryData binaryData) {
-        ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(
-                Constants.PulseArgument.MIN, Constants.PulseArgument.MAX, Constants.PulseArgument.STEP);
-        List<Double> pulse = GaussianPulse.createGaussianPulseForExpectedValueAndStandardDeviation(5, 1.5)
-                .getValuesForArgumentRange(arguments);
-        List<Double> zeroPulse = new ZeroPulse().getValuesForArgumentRange(arguments);
-
-        return generateSignalData(pulse, zeroPulse, arguments, binaryData.getBinarySequence());
-
+    private Pulse createPulse(Constants.PulseType pulseType, double isiRate) {
+        if (Constants.PulseType.GAUSSIAN.equals(pulseType)) {
+            return GaussianPulse.createGaussianPulseForExpectedValueAndStandardDeviation(5, 1.5, isiRate);
+        } else if (Constants.PulseType.LORENTZIAN.equals(pulseType)) {
+            return LorentzianPulse.createLorentzianPulseForHalfWidthAndMean(0.5, 5, isiRate);
+        } else if (Constants.PulseType.RAISED_COSINE.equals(pulseType)) {
+            return RaisedCosinePulse.createRaisedCosinePulseForBandwidthAndMean(0.2, 5, isiRate);
+        } else {
+            throw new IllegalArgumentException();
+        }
     }
 
-    private Signal generateLorentzianBinarySignal(BinaryData binaryData) {
-        ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(
-                Constants.PulseArgument.MIN, Constants.PulseArgument.MAX, Constants.PulseArgument.STEP);
-        List<Double> pulse = LorentzianPulse.createLorentzianPulseForHalfWidthAndMean(0.5, 5)
-                .getValuesForArgumentRange(arguments);
-        List<Double> zeroPulse = new ZeroPulse().getValuesForArgumentRange(arguments);
-
-        return generateSignalData(pulse, zeroPulse, arguments, binaryData.getBinarySequence());
-
-    }
-
-    private Signal generateRaisedCosineBinarySignal(BinaryData binaryData) {
-        ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(
-                Constants.PulseArgument.MIN, Constants.PulseArgument.MAX, Constants.PulseArgument.STEP);
-        List<Double> pulse = RaisedCosinePulse.createRaisedCosinePulseForBandwidthAndMean(0.2, 5)
-                .getValuesForArgumentRange(arguments);
-        List<Double> zeroPulse = new ZeroPulse().getValuesForArgumentRange(arguments);
-
-        return generateSignalData(pulse, zeroPulse, arguments, binaryData.getBinarySequence());
-
-    }
-
-    private Signal generateSignalData(List<Double> pulse, List<Double> zeroPulse, ArgumentRange arguments,
-                                      List<Boolean> binarySequence) {
+    private Signal generateSignalData(List<Double> pulse, ArgumentRange arguments, List<Boolean> binarySequence) {
 
         int sequenceSize = binarySequence.size();
-        List<Double> completeSignalValues = new ArrayList<>(sequenceSize * pulse.size());
-        List<Double> completeSignalArguments = new ArrayList<>(sequenceSize * arguments.getArguments().size());
+        List<Double> completeSignalValues = initializeCompleteSignalValues(sequenceSize * pulse.size() + pulse.size() * 2);
+        List<Double> completeSignalArguments = ArgumentRange.createArgumentRangeForParameters(
+                0, completeSignalValues.size() / PulseArgument.STEP, PulseArgument.STEP).getArguments();
 
-        binarySequence.forEach(
-                bit -> {
-                    if (bit) {
-                        completeSignalValues.addAll(pulse);
-                    } else {
-                        completeSignalValues.addAll(zeroPulse);
-                    }
-                    completeSignalArguments.addAll(arguments.getArguments());
-                    arguments.shiftArgumentsOneTime();
-                });
+        int currentPosition = 0;
+        int bitSize = arguments.getArguments().size();
+
+        for (boolean bit : binarySequence) {
+            if (bit) {
+                addPulse(pulse, completeSignalValues, currentPosition);
+            }
+
+            currentPosition += bitSize / InterferedPulse.ISI_RATE;
+        }
 
         return Signal.createSignalForValuesAndArguments(completeSignalValues, completeSignalArguments);
+
     }
+
+    private void addPulse(List<Double> pulse, List<Double> values, int startPosition) {
+
+        for (int i = 0; i < pulse.size(); ++i) {
+            double currentValue = values.get(startPosition + i);
+            values.set(startPosition + i, currentValue + pulse.get(i));
+        }
+    }
+
+    private List<Double> initializeCompleteSignalValues(int numberOfValues) {
+        return Stream.generate(() -> 0D).limit(numberOfValues).collect(Collectors.toCollection(LinkedList::new));
+    }
+
 }

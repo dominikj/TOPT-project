@@ -67,9 +67,9 @@ public class GaussianPulseTest extends PulseTest {
 
     @Test
     public void testGaussianFunction() {
-        GaussianPulse gaussianPulse = GaussianPulse.createGaussianPulseForExpectedValueAndStandardDeviation(3, 0.5);
+        GaussianPulse gaussianPulse = GaussianPulse.createGaussianPulseForExpectedValueAndStandardDeviation(3, 0.5,1);
         ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(1.5, 4.5, 0.01);
-        List<Double> values = gaussianPulse.getValuesForArgumentRange(arguments);
+        List<Double> values = gaussianPulse.getValuesForArgumentRange(arguments,false);
 
         assertTrue(roundValues(values).equals(roundValues(gaussianPulseReference)));
     }

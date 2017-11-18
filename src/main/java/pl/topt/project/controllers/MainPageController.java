@@ -16,12 +16,13 @@ import javax.validation.Valid;
 import java.util.Arrays;
 import java.util.List;
 
+import static pl.topt.project.constants.Constants.WebConstants.BITS_TO_SHOW;
+
 @Controller
 @SessionAttributes("binaryData")
 public class MainPageController {
 
     private static final String SIMULATION_BINARY_SEQUENCE_SIZE_KEY = "simulation.binarySequence.size";
-    private static final int BITS_TO_SHOW = 5;
     private static final int PRECISION_TO_SHOW = 2;
 
     private final Environment environment;
@@ -79,12 +80,12 @@ public class MainPageController {
     private BinaryData limitBinaryDataToShow(BinaryData binaryData) {
         BinaryData reducedBinaryData = new BinaryData();
         reducedBinaryData.setBinarySequence(binaryData.getBinarySequence().subList(0, BITS_TO_SHOW));
+        reducedBinaryData.setBinarySignal(binaryData.getBinarySignal());
         return reducedBinaryData;
     }
 
     @ModelAttribute("bitsNumber")
     public int addBitsNumber() {
         return Integer.parseInt(environment.getProperty(SIMULATION_BINARY_SEQUENCE_SIZE_KEY));
-
     }
 }

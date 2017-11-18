@@ -3,6 +3,7 @@ package pl.topt.project.utils;
 import com.google.common.base.Preconditions;
 import org.apache.commons.math3.util.Precision;
 import pl.topt.project.constants.Constants;
+import pl.topt.project.constants.Constants.PulseArgument.CleanPulse;
 import pl.topt.project.data.Signal;
 
 import java.util.List;
@@ -24,12 +25,14 @@ public class SignalUtils {
     }
 
     public static Signal limitData(int bits, Signal signal) {
-        int bitSize = (int) ((Constants.PulseArgument.MAX - Constants.PulseArgument.MIN) / Constants.PulseArgument.STEP);
-        int numberOfSamples = bits * bitSize;
-        Signal refactoredSignal = new Signal();
-        refactoredSignal.setValues(signal.getValues().subList(0, numberOfSamples));
-        refactoredSignal.setArguments(signal.getArguments().subList(0, numberOfSamples));
-        return refactoredSignal;
+        int numberOfSamples = calculateNumerOfSamples(bits);
+        return Signal.createSignalForValuesAndArguments(signal.getValues().subList(0, numberOfSamples),
+                signal.getArguments().subList(0, numberOfSamples));
+    }
+
+    private static int calculateNumerOfSamples(int bits) {
+        int bitSize = (int) ((CleanPulse.MAX - CleanPulse.MIN) / Constants.PulseArgument.STEP);
+        return (bits + 1) * bitSize;
     }
 
     public static final double calculateSignalRms(Signal signal) {
@@ -47,6 +50,25 @@ public class SignalUtils {
     public static final double calculateNoisePowerForSNR(double signalRms, double snr) {
         double denominator = pow(10, snr / 20);
         return signalRms / denominator;
+    }
+
+    public static final double calculatePulseWidth(Signal signal) {
+        int sampleStart = 0, sampleStop = 0;
+
+        for (int i = 0; i < signal.getValues().size(); ++i) {
+            if (signal.getValues().get(i) >= 0.5) {
+                sampleStart = i;
+                break;
+            }
+        }
+        for (int i = sampleStart + 1; i < signal.getValues().size(); ++i) {
+            if (signal.getValues().get(i) <= 0.5) {
+                sampleStop = i;
+                break;
+            }
+        }
+
+        return signal.getArguments().get(sampleStop) - signal.getArguments().get(sampleStart);
     }
 
     private static double calculateEuclideanVectorNorm(List<Double> vector) {

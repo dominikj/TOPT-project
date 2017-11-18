@@ -7,6 +7,15 @@ import java.util.List;
  */
 public class BinaryData {
     private List<Boolean> binarySequence;
+    private Signal binarySignal;
+
+    public Signal getBinarySignal() {
+        return binarySignal;
+    }
+
+    public void setBinarySignal(Signal binarySignal) {
+        this.binarySignal = binarySignal;
+    }
 
     public List<Boolean> getBinarySequence() {
         return binarySequence;

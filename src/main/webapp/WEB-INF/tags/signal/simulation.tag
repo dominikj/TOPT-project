@@ -6,12 +6,16 @@
 <script>
   $ARGUMENTS = ${arguments};
   $VALUES = ${signalValues};
+  $BINARY_VALUES = ${binaryData.binarySignal.values};
 </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.0/Chart.bundle.js"></script>
+<script src="http://rawgithub.com/aino/throbber.js/master/throbber.js"></script>
+<script src="js/jquery.ajax-progress.js"></script>
 <script src="js/chart-utils.js"></script>
 <script src="js/jquery.serialize-object.min.js"></script>
 <script src="js/signalSimulation.js"></script>
 <div>
+  <div id="throbber" class="throbber"></div>
   <canvas id="canvas"></canvas>
 </div>
 <div>
@@ -32,6 +36,8 @@
     <form:options items="${pulseTypes}"/>
   </form:select>
   <form:label path="addNoise">Add noise</form:label>
-  <form:checkbox path="addNoise" id="addNoise" value="true" /> &nbsp; SNR=<form:input id="noiseSNR" type="number" step="0.01" disabled="true" path="noiseSNR"/>[dB]
+  <form:checkbox path="addNoise" id="addNoise" value="true" /> &nbsp; SNR=<form:input id="noiseSNR" type="number" step="0.01" disabled="true" path="noiseSNR"/>[dB]<br/>
+  <form:label path="addIsi">Add ISI</form:label>
+  <form:checkbox path="addIsi" id="addIsi" value="true" /> &nbsp; SNR=<form:input id="isiRate" type="number" min="0.01" step="0.01" disabled="true" path="isiRate"/>
 </form:form>
 <button type="button" id="show-signal">Show signal</button>

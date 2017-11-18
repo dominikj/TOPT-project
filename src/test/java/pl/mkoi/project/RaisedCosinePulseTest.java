@@ -121,9 +121,9 @@ public class RaisedCosinePulseTest extends PulseTest {
 
     @Test
     public void LorentzianPulseTest() {
-        RaisedCosinePulse pulse = RaisedCosinePulse.createRaisedCosinePulseForBandwidthAndMean(1.5, 1);
+        RaisedCosinePulse pulse = RaisedCosinePulse.createRaisedCosinePulseForBandwidthAndMean(1.5, 1,1);
         ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(-2, 2, 0.01);
-        List<Double> values = pulse.getValuesForArgumentRange(arguments);
+        List<Double> values = pulse.getValuesForArgumentRange(arguments,false);
 
         assertTrue(roundValues(values).equals(roundValues(raisedCosinePulseReferene)));
     }

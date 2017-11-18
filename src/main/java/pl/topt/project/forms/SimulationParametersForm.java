@@ -11,12 +11,14 @@ public class SimulationParametersForm {
     private boolean addNoise;
     @NotNull
     private Constants.PulseType pulseType;
-    //    private boolean addIsi;
-    private Double noiseSNR;
+    private boolean addIsi;
+    private double isiRate;
+    private double noiseSNR;
 
     public SimulationParametersForm() {
         pulseType = Constants.PulseType.GAUSSIAN;
-        noiseSNR = Double.valueOf(0);
+        noiseSNR = 0;
+        isiRate = 1;
     }
 
     public Double getNoiseSNR() {
@@ -27,13 +29,13 @@ public class SimulationParametersForm {
         this.noiseSNR = noiseSNR;
     }
 
-//    public boolean isAddIsi() {
-//        return addIsi;
-//    }
-//
-//    public void setAddIsi(boolean addIsi) {
-//        this.addIsi = addIsi;
-//    }
+    public boolean isAddIsi() {
+        return addIsi;
+    }
+
+    public void setAddIsi(boolean addIsi) {
+        this.addIsi = addIsi;
+    }
 
     public Constants.PulseType getPulseType() {
         return pulseType;
@@ -49,5 +51,13 @@ public class SimulationParametersForm {
 
     public void setAddNoise(boolean addNoise) {
         this.addNoise = addNoise;
+    }
+
+    public double getIsiRate() {
+        return isiRate;
+    }
+
+    public void setIsiRate(double isiRate) {
+        this.isiRate = isiRate;
     }
 }

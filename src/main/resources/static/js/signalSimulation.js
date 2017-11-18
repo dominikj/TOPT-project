@@ -1,15 +1,23 @@
 var config = {
   type: 'line',
   data: {
-    labels: $ARGUMENTS,
+    labels: $ARGUMENTS.slice(25,$ARGUMENTS.length),
     datasets: [{
       label: "Signal",
       backgroundColor: window.chartColors.red,
       borderColor: window.chartColors.red,
-      data: $VALUES,
+      data:  $VALUES.slice(25,$VALUES.length),
       fill: false,
       pointRadius: 0
-    }]
+    },
+    {
+    label: "Binary data",
+    backgroundColor: window.chartColors.green,
+    borderColor: window.chartColors.green,
+    data: $BINARY_VALUES.slice(25,$BINARY_VALUES.length),
+    fill: false,
+    pointRadius: 0
+  }]
   },
   options: {
     responsive: true,
@@ -43,6 +51,13 @@ var config = {
     }
   }
 };
+var throb = Throbber({
+    color: 'red',
+    padding: 50,
+    size: 70,
+    fade: 200,
+    clockwise: false
+})
 
 window.onload = function() {
   var ctx = $("#canvas")[0].getContext("2d");
@@ -57,11 +72,16 @@ $(document).ready(function() {
       dataType: 'json',
       contentType: "application/json",
       data: $("#simulationParameters").serializeJSON(),
+      progress: function(){
+        throb.appendTo(document.getElementById('throbber')).start();
+      },
       success: function(data) {
+        throb.stop();
         $ARGUMENTS = data.arguments;
         $VALUES = data.values;
-        config.data.datasets[0].data = $VALUES;
-        config.data.labels = $ARGUMENTS;
+        config.data.datasets[0].data = $VALUES.slice(25,$VALUES.length);
+        config.data.labels = $ARGUMENTS.slice(25,$ARGUMENTS.length);
+        config.data.datasets[1].data = $BINARY_VALUES.slice(25,$BINARY_VALUES.length);
         window.myLine.update();
       }
     });
@@ -81,6 +101,7 @@ $(document).ready(function() {
             return "0&nbsp;"
           }(bit));
         });
+        $BINARY_VALUES = data.binarySignal.values;
       }
     });
   });
@@ -90,6 +111,14 @@ $(document).ready(function() {
       $("#noiseSNR").attr("disabled", false)
     } else {
       $("#noiseSNR").attr("disabled", true)
+    }
+  });
+
+  $("#addIsi").click(function() {
+    if ($("#isiRate").attr("disabled")) {
+      $("#isiRate").attr("disabled", false)
+    } else {
+      $("#isiRate").attr("disabled", true)
     }
   });
 });

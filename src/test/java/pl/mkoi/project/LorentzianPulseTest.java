@@ -55,9 +55,9 @@ public class LorentzianPulseTest extends PulseTest {
 
     @Test
     public void LorentzianPulseTest() {
-        LorentzianPulse pulse = LorentzianPulse.createLorentzianPulseForHalfWidthAndMean(0.25, 3);
+        LorentzianPulse pulse = LorentzianPulse.createLorentzianPulseForHalfWidthAndMean(0.25, 3,1);
         ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(2, 4, 0.01);
-        List<Double> values = pulse.getValuesForArgumentRange(arguments);
+        List<Double> values = pulse.getValuesForArgumentRange(arguments,false);
 
         assertTrue(roundValues(values).equals(roundValues(lorentzianPulseReferene)));
     }
