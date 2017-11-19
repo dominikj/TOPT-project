@@ -12,13 +12,13 @@ public class SimulationParametersForm {
     @NotNull
     private Constants.PulseType pulseType;
     private boolean addIsi;
-    private double isiRate;
+    private double isiRate; //epsilon
     private double noiseSNR;
 
     public SimulationParametersForm() {
         pulseType = Constants.PulseType.GAUSSIAN;
         noiseSNR = 0;
-        isiRate = 1;
+        isiRate = 0;
     }
 
     public Double getNoiseSNR() {

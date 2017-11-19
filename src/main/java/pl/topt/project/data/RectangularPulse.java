@@ -1,30 +1,32 @@
 package pl.topt.project.data;
 
+import pl.topt.project.constants.Constants.PulseArgument;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static pl.topt.project.constants.Constants.PulseArgument.CleanPulse.MAX;
+import static pl.topt.project.constants.Constants.PulseArgument.CleanPulse.MIN;
+
 /**
  * Created by dominik on 18.11.17.
  */
 public class RectangularPulse implements Pulse {
+
     @Override
     public List<Double> getValuesForArgumentRange(ArgumentRange argumentRange, boolean adjustMeanToArgumentRange) {
-
-        int argumentsFactor = argumentRange.getArguments().size() / 3;
-        List<Double> lowValues = generateLowValue(argumentsFactor);
-        List<Double> highValues = generateHighValue(argumentsFactor);
-        List<Double> pulseValues = new ArrayList<>();
-        pulseValues.addAll(lowValues);
-        pulseValues.addAll(highValues);
-        pulseValues.addAll(lowValues);
-        return pulseValues;
-    }
-
-    @Override
-    public double calculateParameterForPulseWidth(double width) {
-        return 0;
+        int argumentsSize = argumentRange.getArguments().size();
+        int cleanPulseSize = (int) ((MAX - MIN) / PulseArgument.STEP);
+        int center = cleanPulseSize;
+        int highValueArgStart = center - cleanPulseSize / 2;
+        int highValueArgStop = highValueArgStart + cleanPulseSize;
+        List<Double> rectangularPulse = new ArrayList<>();
+        rectangularPulse.addAll(generateLowValue(highValueArgStart));
+        rectangularPulse.addAll(generateHighValue(highValueArgStop - highValueArgStart));
+        rectangularPulse.addAll(generateLowValue(argumentsSize - highValueArgStop));
+        return rectangularPulse;
     }
 
     private List<Double> generateHighValue(int numberOfValues) {

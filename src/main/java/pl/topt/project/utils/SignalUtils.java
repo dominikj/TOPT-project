@@ -2,14 +2,15 @@ package pl.topt.project.utils;
 
 import com.google.common.base.Preconditions;
 import org.apache.commons.math3.util.Precision;
-import pl.topt.project.constants.Constants;
 import pl.topt.project.constants.Constants.PulseArgument.CleanPulse;
+import pl.topt.project.constants.Constants.PulseArgument.InterferedPulse;
 import pl.topt.project.data.Signal;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.apache.commons.math3.util.FastMath.*;
+import static pl.topt.project.constants.Constants.PulseArgument.STEP;
 
 /**
  * Created by dominik on 31.10.17.
@@ -26,13 +27,17 @@ public class SignalUtils {
 
     public static Signal limitData(int bits, Signal signal) {
         int numberOfSamples = calculateNumerOfSamples(bits);
-        return Signal.createSignalForValuesAndArguments(signal.getValues().subList(0, numberOfSamples),
-                signal.getArguments().subList(0, numberOfSamples));
+        double pulseCenter = (InterferedPulse.MAX - InterferedPulse.MIN) / 2;
+        double cleanPulseWidth = CleanPulse.MAX - CleanPulse.MIN;
+        int figureOffset = (int) ((pulseCenter - cleanPulseWidth) / STEP);
+        int sampleOffset = (int) ((pulseCenter - (cleanPulseWidth / 2)) / STEP);
+        return Signal.createSignalForValuesAndArguments(signal.getValues().subList(figureOffset, sampleOffset + numberOfSamples),
+                signal.getArguments().subList(figureOffset, sampleOffset + numberOfSamples));
     }
 
     private static int calculateNumerOfSamples(int bits) {
-        int bitSize = (int) ((CleanPulse.MAX - CleanPulse.MIN) / Constants.PulseArgument.STEP);
-        return (bits + 1) * bitSize;
+        int bitSize = (int) ((CleanPulse.MAX - CleanPulse.MIN) / STEP);
+        return (bits) * bitSize;
     }
 
     public static final double calculateSignalRms(Signal signal) {
@@ -52,23 +57,23 @@ public class SignalUtils {
         return signalRms / denominator;
     }
 
-    public static final double calculatePulseWidth(Signal signal) {
+    public static final double calculatePulseWidth(List<Double> pulse, List<Double> arguments) {
         int sampleStart = 0, sampleStop = 0;
 
-        for (int i = 0; i < signal.getValues().size(); ++i) {
-            if (signal.getValues().get(i) >= 0.5) {
+        for (int i = 0; i < pulse.size(); ++i) {
+            if (pulse.get(i) >= 0.5) {
                 sampleStart = i;
                 break;
             }
         }
-        for (int i = sampleStart + 1; i < signal.getValues().size(); ++i) {
-            if (signal.getValues().get(i) <= 0.5) {
+        for (int i = sampleStart + 1; i < pulse.size(); ++i) {
+            if (pulse.get(i) <= 0.5) {
                 sampleStop = i;
                 break;
             }
         }
 
-        return signal.getArguments().get(sampleStop) - signal.getArguments().get(sampleStart);
+        return arguments.get(sampleStop) - arguments.get(sampleStart);
     }
 
     private static double calculateEuclideanVectorNorm(List<Double> vector) {

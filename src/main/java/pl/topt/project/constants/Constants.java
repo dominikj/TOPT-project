@@ -19,7 +19,7 @@ public class Constants {
         }
 
         interface InterferedPulse {
-            double ISI_RATE = 3;
+            double ISI_RATE = 6;
             double MIN = CleanPulse.MIN;
             double MAX = CleanPulse.MAX * ISI_RATE;
         }

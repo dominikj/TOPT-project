@@ -84,6 +84,7 @@ public class MainPageController {
         return reducedBinaryData;
     }
 
+
     @ModelAttribute("bitsNumber")
     public int addBitsNumber() {
         return Integer.parseInt(environment.getProperty(SIMULATION_BINARY_SEQUENCE_SIZE_KEY));

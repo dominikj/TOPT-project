@@ -1,7 +1,5 @@
 package pl.topt.project.data;
 
-import com.google.common.base.Preconditions;
-
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -14,20 +12,21 @@ public class LorentzianPulse implements Pulse {
 
     private double halfOfThePeakWidth;
     private double mean; //theta zero
-    private double isiRate;
 
-    private LorentzianPulse(double halfOfThePeakWidth, double mean, double isiRate) {
+    private LorentzianPulse(double halfOfThePeakWidth, double mean) {
         this.halfOfThePeakWidth = halfOfThePeakWidth;
         this.mean = mean;
-        this.isiRate = isiRate;
     }
 
-    public static LorentzianPulse createLorentzianPulseForHalfWidthAndMean(double halfOfThePeakWidth, double mean,
-                                                                           double isiRate) {
-        Preconditions.checkArgument(isiRate > 0);
+    public static LorentzianPulse createLorentzianPulseForHalfWidthAndMean(double halfOfThePeakWidth, double mean) {
 
-        return new LorentzianPulse(halfOfThePeakWidth, mean, isiRate);
+        return new LorentzianPulse(halfOfThePeakWidth, mean);
     }
+
+    public static double calculatehalfWidthForPulseWidth(double width) {
+        return width / 2;
+    }
+
 
     @Override
     public List<Double> getValuesForArgumentRange(ArgumentRange argumentRange, boolean adjustMeanToArgumentRange) {
@@ -40,14 +39,8 @@ public class LorentzianPulse implements Pulse {
         return arguments.stream().map(this::value).collect(Collectors.toList());
     }
 
-    @Override
-    public double calculateParameterForPulseWidth(double width) {
-        return 0;
-    }
-
     private double value(double argument) {
-        double scaledHalfOfThePeakWidth = this.halfOfThePeakWidth * this.isiRate;
-        double doublePowWidth = pow(scaledHalfOfThePeakWidth, 2);
+        double doublePowWidth = pow(halfOfThePeakWidth, 2);
         return doublePowWidth / (doublePowWidth + pow(argument - this.mean, 2));
     }
 

@@ -17,6 +17,8 @@ import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.apache.commons.math3.util.FastMath.pow;
+import static org.apache.commons.math3.util.FastMath.sqrt;
 import static pl.topt.project.constants.Constants.WebConstants.BITS_TO_SHOW;
 
 /**
@@ -39,7 +41,7 @@ public class SignalGeneratorService {
 
         binaryData.setBinarySequence(binarySequence);
         Signal signalData = generateSignalData(new RectangularPulse().getValuesForArgumentRange(arguments, false),
-                arguments, binarySequence.subList(0, BITS_TO_SHOW));
+                arguments, binarySequence.subList(0, BITS_TO_SHOW), false);
         binaryData.setBinarySignal(signalData);
         return binaryData;
     }
@@ -47,20 +49,27 @@ public class SignalGeneratorService {
     public Signal generateSignal(BinaryData binaryData, SimulationParametersForm parametersForm) {
 
         Signal signal;
-        Pulse pulse = createPulse(parametersForm.getPulseType(), parametersForm.getIsiRate());
+        double pulseWidth = 0;
+        if (parametersForm.isAddIsi()) {
+            pulseWidth = calculatePulseWidthForIsiRate(parametersForm.getIsiRate());
+        }
+        Pulse pulse = createPulse(parametersForm.getPulseType(), pulseWidth);
         ArgumentRange arguments = ArgumentRange.createArgumentRangeForParameters(
                 InterferedPulse.MIN, InterferedPulse.MAX, PulseArgument.STEP);
         signal = generateSignalData(pulse.getValuesForArgumentRange(arguments, true),
-                arguments, binaryData.getBinarySequence());
+                arguments, binaryData.getBinarySequence(), true);
 
 
         if (parametersForm.isAddNoise()) {
             signal = addNoiseToSignalWithSNR(signal, parametersForm.getNoiseSNR());
         }
 
-        LOGGER.info("Pulse width: {}", SignalUtils.calculatePulseWidth(signal));
-
         return signal;
+    }
+
+    private double calculatePulseWidthForIsiRate(double isiRate) {
+        double extensionFactor = sqrt(1 + pow(isiRate, 2));
+        return (PulseArgument.CleanPulse.MAX - PulseArgument.CleanPulse.MIN) * extensionFactor;
     }
 
     private Signal addNoiseToSignalWithSNR(final Signal signal, double snr) {
@@ -100,19 +109,26 @@ public class SignalGeneratorService {
         return gaussianNoiseValues;
     }
 
-    private Pulse createPulse(Constants.PulseType pulseType, double isiRate) {
+    private Pulse createPulse(Constants.PulseType pulseType, double pulseWidth) {
+        LOGGER.info("Selected pulse: {}", pulseType);
         if (Constants.PulseType.GAUSSIAN.equals(pulseType)) {
-            return GaussianPulse.createGaussianPulseForExpectedValueAndStandardDeviation(5, 1.5, isiRate);
+            double standardDeviation = pulseWidth == 0 ? 1.5 : GaussianPulse.calculateStandardDeviationForPulseWidth(pulseWidth);
+            return GaussianPulse.createGaussianPulseForExpectedValueAndStandardDeviation(5, standardDeviation);
         } else if (Constants.PulseType.LORENTZIAN.equals(pulseType)) {
-            return LorentzianPulse.createLorentzianPulseForHalfWidthAndMean(0.5, 5, isiRate);
+            double halfWidth = pulseWidth == 0 ? 0.5 : LorentzianPulse.calculatehalfWidthForPulseWidth(pulseWidth);
+            return LorentzianPulse.createLorentzianPulseForHalfWidthAndMean(halfWidth, 5);
+
         } else if (Constants.PulseType.RAISED_COSINE.equals(pulseType)) {
-            return RaisedCosinePulse.createRaisedCosinePulseForBandwidthAndMean(0.2, 5, isiRate);
+            double bandwidth = pulseWidth == 0 ? 0.2 : RaisedCosinePulse.calculateBandwidthForPulseWidth(pulseWidth);
+            return RaisedCosinePulse.createRaisedCosinePulseForBandwidthAndMean(bandwidth, 5);
         } else {
             throw new IllegalArgumentException();
         }
     }
 
-    private Signal generateSignalData(List<Double> pulse, ArgumentRange arguments, List<Boolean> binarySequence) {
+    private Signal generateSignalData(List<Double> pulse, ArgumentRange arguments, List<Boolean> binarySequence, boolean withIsi) {
+
+        LOGGER.info("Pulse width: {}", SignalUtils.calculatePulseWidth(pulse, arguments.getArguments()));
 
         int sequenceSize = binarySequence.size();
         List<Double> completeSignalValues = initializeCompleteSignalValues(sequenceSize * pulse.size() + pulse.size() * 2);

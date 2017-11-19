@@ -1,12 +1,12 @@
 var config = {
   type: 'line',
   data: {
-    labels: $ARGUMENTS.slice(25,$ARGUMENTS.length),
+    labels: $ARGUMENTS, //.slice(50,$ARGUMENTS.length),
     datasets: [{
       label: "Signal",
       backgroundColor: window.chartColors.red,
       borderColor: window.chartColors.red,
-      data:  $VALUES.slice(25,$VALUES.length),
+      data:  $VALUES, //.slice(50,$VALUES.length),
       fill: false,
       pointRadius: 0
     },
@@ -46,7 +46,11 @@ var config = {
         scaleLabel: {
           display: true,
           labelString: 'Value'
-        }
+        },
+        ticks: {
+                  //  min: 0,
+                   max: 2
+               }
       }]
     }
   }
@@ -81,10 +85,10 @@ $(document).ready(function() {
         throb.stop();
         $ARGUMENTS = data.arguments;
         $VALUES = data.values;
-        config.data.datasets[0].data = $VALUES.slice(25,$VALUES.length);
-        config.data.labels = $ARGUMENTS.slice(25,$ARGUMENTS.length);
+        config.data.datasets[0].data = $VALUES;
+        config.data.labels = $ARGUMENTS;
         if($SHOW_BINARY_SIGNAL){
-          config.data.datasets[1].data = $BINARY_VALUES.slice(25,$BINARY_VALUES.length);
+          config.data.datasets[1].data = $BINARY_VALUES;
         }
         window.myLine.update();
       }
@@ -127,7 +131,7 @@ $(document).ready(function() {
   });
 
   $("#binary-signal-show").click(function() {
-    config.data.datasets[1].data = $BINARY_VALUES.slice(25,$BINARY_VALUES.length);
+    config.data.datasets[1].data = $BINARY_VALUES;
     window.myLine.update();
     $SHOW_BINARY_SIGNAL = true;
     $(this).attr("hidden", "hidden");

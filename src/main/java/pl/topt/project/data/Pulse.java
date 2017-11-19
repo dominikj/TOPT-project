@@ -7,5 +7,4 @@ public interface Pulse {
 
     List<Double> getValuesForArgumentRange(ArgumentRange argumentRange, boolean adjustMeanToArgumentRange);
 
-    double calculateParameterForPulseWidth(double width);
 }
