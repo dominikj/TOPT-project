@@ -29,6 +29,8 @@
 </c:forEach>
   </b> (...) <br />
   <button type="button" id="generate-binary-sequence">Generate new ${bitsNumber} bits sequence</button>
+  <button type="button" id="binary-signal-show">Show</button>
+  <button type="button" hidden="hidden" id="binary-signal-hide">Hide</button>
 </div>
 <form:form method="POST" id="simulationParameters" action="#" modelAttribute="simulationParameters">
   <form:label path="pulseType">Pulse type:</form:label>

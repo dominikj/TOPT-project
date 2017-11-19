@@ -14,7 +14,7 @@ var config = {
     label: "Binary data",
     backgroundColor: window.chartColors.green,
     borderColor: window.chartColors.green,
-    data: $BINARY_VALUES.slice(25,$BINARY_VALUES.length),
+    data: [],
     fill: false,
     pointRadius: 0
   }]
@@ -64,6 +64,8 @@ window.onload = function() {
   window.myLine = new Chart(ctx, config);
 };
 
+$SHOW_BINARY_SIGNAL = false;
+
 $(document).ready(function() {
   $("#show-signal").click(function() {
     $.ajax({
@@ -81,7 +83,9 @@ $(document).ready(function() {
         $VALUES = data.values;
         config.data.datasets[0].data = $VALUES.slice(25,$VALUES.length);
         config.data.labels = $ARGUMENTS.slice(25,$ARGUMENTS.length);
-        config.data.datasets[1].data = $BINARY_VALUES.slice(25,$BINARY_VALUES.length);
+        if($SHOW_BINARY_SIGNAL){
+          config.data.datasets[1].data = $BINARY_VALUES.slice(25,$BINARY_VALUES.length);
+        }
         window.myLine.update();
       }
     });
@@ -121,4 +125,21 @@ $(document).ready(function() {
       $("#isiRate").attr("disabled", true)
     }
   });
+
+  $("#binary-signal-show").click(function() {
+    config.data.datasets[1].data = $BINARY_VALUES.slice(25,$BINARY_VALUES.length);
+    window.myLine.update();
+    $SHOW_BINARY_SIGNAL = true;
+    $(this).attr("hidden", "hidden");
+    $("#binary-signal-hide").removeAttr("hidden");
+  });
+
+  $("#binary-signal-hide").click(function() {
+    config.data.datasets[1].data = [];
+    window.myLine.update();
+    $SHOW_BINARY_SIGNAL = false;
+    $(this).attr("hidden", "hidden");
+    $("#binary-signal-show").removeAttr("hidden");
+  });
+
 });
