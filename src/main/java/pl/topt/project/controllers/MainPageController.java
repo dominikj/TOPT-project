@@ -10,6 +10,7 @@ import pl.topt.project.data.BinaryData;
 import pl.topt.project.data.Signal;
 import pl.topt.project.forms.SimulationParametersForm;
 import pl.topt.project.services.SignalGeneratorService;
+import pl.topt.project.services.SignalMeasureService;
 import pl.topt.project.utils.SignalUtils;
 
 import javax.validation.Valid;
@@ -27,11 +28,14 @@ public class MainPageController {
 
     private final Environment environment;
     private final SignalGeneratorService signalGeneratorService;
+    private final SignalMeasureService signalMeasureService;
 
     @Autowired
-    public MainPageController(Environment environment, SignalGeneratorService signalGeneratorService) {
+    public MainPageController(Environment environment, SignalGeneratorService signalGeneratorService,
+                              SignalMeasureService signalMeasureService) {
         this.environment = environment;
         this.signalGeneratorService = signalGeneratorService;
+        this.signalMeasureService = signalMeasureService;
     }
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -40,6 +44,7 @@ public class MainPageController {
         BinaryData binaryData = signalGeneratorService.generateBinaryData(bits);
         SimulationParametersForm simulationParametersForm = new SimulationParametersForm();
         Signal signal = signalGeneratorService.generateSignal(binaryData, simulationParametersForm);
+        measureSignal(signal, binaryData);
         signal = SignalUtils.scaleAndRoundData(1D, PRECISION_TO_SHOW, signal);
 
         model.addAttribute("simulationParameters", simulationParametersForm);
@@ -57,8 +62,8 @@ public class MainPageController {
                                   @RequestBody @Valid SimulationParametersForm simulationParametersForm) {
 
         Signal signal = signalGeneratorService.generateSignal(binaryData, simulationParametersForm);
+        measureSignal(signal, binaryData);
         signal = SignalUtils.scaleAndRoundData(1D, PRECISION_TO_SHOW, signal);
-
         return SignalUtils.limitData(BITS_TO_SHOW, signal);
 
     }
@@ -88,5 +93,11 @@ public class MainPageController {
     @ModelAttribute("bitsNumber")
     public int addBitsNumber() {
         return Integer.parseInt(environment.getProperty(SIMULATION_BINARY_SEQUENCE_SIZE_KEY));
+    }
+
+    private void measureSignal(Signal signal, BinaryData binaryData) {
+        List<Double> receivedSamples = signalMeasureService.samplingSignal(signal);
+        signalMeasureService.calculateElectricalSignalToNoiseRatio(receivedSamples);
+        signalMeasureService.calculateNumberOfErrors(binaryData, receivedSamples);
     }
 }

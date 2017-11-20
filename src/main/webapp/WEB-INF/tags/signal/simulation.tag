@@ -36,7 +36,7 @@
   <form:label path="pulseType">Pulse type:</form:label>
   <form:select id="pulseType" path="pulseType">
     <form:options items="${pulseTypes}"/>
-  </form:select>
+  </form:select><br />
   <form:label path="addNoise">Noise</form:label>
   <form:checkbox path="addNoise" id="addNoise" value="true" /> &nbsp; SNR=<form:input id="noiseSNR" type="number" step="0.01" disabled="true" path="noiseSNR"/>[dB]<br/>
   <form:label path="addIsi">ISI</form:label>
