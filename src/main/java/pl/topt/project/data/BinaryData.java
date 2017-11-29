@@ -8,7 +8,7 @@ import java.util.List;
 public class BinaryData {
     private List<Boolean> binarySequence;
     private Signal binarySignal;
-
+    private int numberOfBits;
     public Signal getBinarySignal() {
         return binarySignal;
     }
@@ -25,4 +25,11 @@ public class BinaryData {
         this.binarySequence = binarySequence;
     }
 
+    public int getNumberOfBits() {
+        return numberOfBits;
+    }
+
+    public void setNumberOfBits(int numberOfBits) {
+        this.numberOfBits = numberOfBits;
+    }
 }

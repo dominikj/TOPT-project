@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.*;
 import pl.topt.project.constants.Constants;
 import pl.topt.project.data.BinaryData;
 import pl.topt.project.data.Signal;
+import pl.topt.project.data.SimulationDataResponse;
+import pl.topt.project.data.builders.SimulationDataResponseBuilder;
 import pl.topt.project.forms.SimulationParametersForm;
 import pl.topt.project.services.SignalGeneratorService;
 import pl.topt.project.services.SignalMeasureService;
@@ -44,37 +46,28 @@ public class MainPageController {
         BinaryData binaryData = signalGeneratorService.generateBinaryData(bits);
         SimulationParametersForm simulationParametersForm = new SimulationParametersForm();
         Signal signal = signalGeneratorService.generateSignal(binaryData, simulationParametersForm);
-        measureSignal(signal, binaryData);
-        signal = SignalUtils.scaleAndRoundData(1D, PRECISION_TO_SHOW, signal);
 
         model.addAttribute("simulationParameters", simulationParametersForm);
         model.addAttribute("binaryData", binaryData);
-
-        model.addAttribute("binaryDataToShow", limitBinaryDataToShow(binaryData));
-        model.addAttribute("signal", SignalUtils.limitData(BITS_TO_SHOW, signal));
+        model.addAttribute("simulationData", buildSimulationResponse(signal, simulationParametersForm.getIsiRate()));
 
         return "home";
     }
 
     @PostMapping(value = "/simulate")
     @ResponseBody
-    public Signal getSignalFigure(@ModelAttribute("binaryData") BinaryData binaryData,
-                                  @RequestBody @Valid SimulationParametersForm simulationParametersForm) {
-
+    public SimulationDataResponse getSignalFigure(@ModelAttribute("binaryData") BinaryData binaryData,
+                                                  @RequestBody @Valid SimulationParametersForm simulationParametersForm) {
         Signal signal = signalGeneratorService.generateSignal(binaryData, simulationParametersForm);
-        measureSignal(signal, binaryData);
-        signal = SignalUtils.scaleAndRoundData(1D, PRECISION_TO_SHOW, signal);
-        return SignalUtils.limitData(BITS_TO_SHOW, signal);
-
+        return buildSimulationResponse(signal, simulationParametersForm.getIsiRate());
     }
 
-    @GetMapping("/binary-sequence/new")
+    @GetMapping("/binary-sequence/new/{numberOfBits}")
     @ResponseBody
-    public BinaryData generateNewBinaryData(Model model) {
-        int bits = Integer.parseInt(environment.getProperty(SIMULATION_BINARY_SEQUENCE_SIZE_KEY));
-        BinaryData binaryData = signalGeneratorService.generateBinaryData(bits);
+    public BinaryData generateNewBinaryData(@PathVariable int numberOfBits, Model model) {
+        BinaryData binaryData = signalGeneratorService.generateBinaryData(numberOfBits);
         model.addAttribute("binaryData", binaryData);
-        return limitBinaryDataToShow(binaryData);
+        return binaryData;
     }
 
     @ModelAttribute("pulseTypes")
@@ -82,22 +75,16 @@ public class MainPageController {
         return Arrays.asList(Constants.PulseType.values());
     }
 
-    private BinaryData limitBinaryDataToShow(BinaryData binaryData) {
-        BinaryData reducedBinaryData = new BinaryData();
-        reducedBinaryData.setBinarySequence(binaryData.getBinarySequence().subList(0, BITS_TO_SHOW));
-        reducedBinaryData.setBinarySignal(binaryData.getBinarySignal());
-        return reducedBinaryData;
+    @ModelAttribute("bitsToShow")
+    public int addBitsToShow() {
+        return BITS_TO_SHOW;
     }
 
-
-    @ModelAttribute("bitsNumber")
-    public int addBitsNumber() {
-        return Integer.parseInt(environment.getProperty(SIMULATION_BINARY_SEQUENCE_SIZE_KEY));
-    }
-
-    private void measureSignal(Signal signal, BinaryData binaryData) {
-        List<Double> receivedSamples = signalMeasureService.samplingSignal(signal);
-        signalMeasureService.calculateElectricalSignalToNoiseRatio(receivedSamples);
-        signalMeasureService.calculateNumberOfErrors(binaryData, receivedSamples);
+    private SimulationDataResponse buildSimulationResponse(Signal signal, double isiRate) {
+        SimulationDataResponseBuilder builder = signalMeasureService.measureSignal(signal);
+        signal = SignalUtils.scaleAndRoundData(1D, PRECISION_TO_SHOW, signal);
+        builder.addSignal(SignalUtils.limitData(BITS_TO_SHOW, signal));
+        builder.addReceiverSensitivityLoss(signalMeasureService.calculateReceiverSensitivityLoss(isiRate));
+        return builder.build();
     }
 }

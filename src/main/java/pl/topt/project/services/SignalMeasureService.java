@@ -1,19 +1,16 @@
 package pl.topt.project.services;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import pl.topt.project.constants.Constants.PulseArgument.CleanPulse;
 import pl.topt.project.constants.Constants.PulseArgument.InterferedPulse;
-import pl.topt.project.data.BinaryData;
 import pl.topt.project.data.Signal;
+import pl.topt.project.data.builders.SimulationDataResponseBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static org.apache.commons.math3.util.FastMath.pow;
-import static org.apache.commons.math3.util.FastMath.sqrt;
+import static org.apache.commons.math3.util.FastMath.*;
 import static pl.topt.project.constants.Constants.PulseArgument.STEP;
 
 /**
@@ -21,11 +18,19 @@ import static pl.topt.project.constants.Constants.PulseArgument.STEP;
  */
 @Component
 public class SignalMeasureService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(SignalMeasureService.class);
 
     private static final double TRESHOLD_LEVEL = 0.5;
 
-    public List<Double> samplingSignal(Signal signal) {
+    public SimulationDataResponseBuilder measureSignal(Signal signal) {
+        List<Double> receivedData = samplingSignal(signal);
+        return calculateElectricalSignalToNoiseRatio(receivedData);
+    }
+
+    public double calculateReceiverSensitivityLoss(double isiRate) {
+        return 5 * log10(1 + 2 * Math.PI * pow(isiRate, 2));
+    }
+
+    private List<Double> samplingSignal(Signal signal) {
         double pulseCenter = (InterferedPulse.MAX - InterferedPulse.MIN) / 2;
         int signalOffset = (int) (pulseCenter / STEP);
         double pulseStep = (CleanPulse.MAX - CleanPulse.MIN) / STEP;
@@ -40,7 +45,8 @@ public class SignalMeasureService {
     }
 
     //Calculate Q parameter
-    public double calculateElectricalSignalToNoiseRatio(List<Double> samples) {
+    private SimulationDataResponseBuilder calculateElectricalSignalToNoiseRatio(List<Double> samples) {
+
         List<Double> highValueSamples = samples.stream()
                 .filter(sample -> sample > TRESHOLD_LEVEL)
                 .collect(Collectors.toList());
@@ -55,27 +61,13 @@ public class SignalMeasureService {
 
         double qParameter = (highValueMean - lowValueMean) / (lowValueStandardDeviation + highValueStandardDeviation);
 
-        LOGGER.info("High value mean: {}", highValueMean);
-        LOGGER.info("Low value mean: {}", lowValueMean);
-        LOGGER.info("Q: {}", qParameter);
-        LOGGER.info("BER: {}", calculateBitErrorRate(qParameter));
-
-        return qParameter;
-    }
-
-    public int calculateNumberOfErrors(BinaryData binaryData, List<Double> samples) {
-
-        List<Boolean> receivedBits = samples.stream().map(sample -> sample > TRESHOLD_LEVEL).collect(Collectors.toList());
-
-        int numberOfErrors = 0;
-        for (int i = 0; i < binaryData.getBinarySequence().size(); ++i) {
-            if (binaryData.getBinarySequence().get(i) != receivedBits.get(i)) {
-                ++numberOfErrors;
-            }
-        }
-        LOGGER.info("Number of errors: {}", numberOfErrors);
-
-        return numberOfErrors;
+        return new SimulationDataResponseBuilder()
+                .addHighMeanValue(highValueMean)
+                .addLowMeanValue(lowValueMean)
+                .addHighStandardDeviation(highValueStandardDeviation)
+                .addLowStandardDeviation(lowValueStandardDeviation)
+                .addBitErrorRate(calculateBitErrorRate(qParameter))
+                .addQParameter(qParameter);
     }
 
     private double calculateMeanValue(List<Double> samples) {

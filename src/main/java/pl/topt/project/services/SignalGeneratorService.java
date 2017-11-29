@@ -1,5 +1,6 @@
 package pl.topt.project.services;
 
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -29,6 +30,8 @@ public class SignalGeneratorService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SignalGeneratorService.class);
 
     public BinaryData generateBinaryData(int bits) {
+        Preconditions.checkArgument(bits > 0);
+
         Random random = new Random();
         BinaryData binaryData = new BinaryData();
         List<Boolean> binarySequence = new ArrayList<>(bits);
@@ -43,6 +46,7 @@ public class SignalGeneratorService {
         Signal signalData = generateSignalData(new RectangularPulse().getValuesForArgumentRange(arguments, false),
                 arguments, binarySequence.subList(0, BITS_TO_SHOW), false);
         binaryData.setBinarySignal(signalData);
+        binaryData.setNumberOfBits(bits);
         return binaryData;
     }
 

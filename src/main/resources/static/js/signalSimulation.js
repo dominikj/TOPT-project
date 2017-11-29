@@ -63,12 +63,32 @@ var throb = Throbber({
     clockwise: false
 })
 
+function updateSimulationResults(data){
+  $("#low-mean-value").text(data.lowMeanValue);
+  $("#high-mean-value").text(data.highMeanValue);
+  $("#low-standard-deviation").text(data.lowStandardDeviation);
+  $("#high-standard-deviation").text(data.higStandardDeviation);
+  $("#q-parameter").text(data.qParameter);
+  $("#ber").text(data.bitErrorRate);
+  $("#p-isi").text(data.receiverSensitivityLoss);
+}
+
+function showBits(binarySequence, numberOfBits){
+  $("#binary-sequence").empty();
+  $.each(binarySequence.slice(0,numberOfBits), function(index, bit) {
+    $("#binary-sequence").append(function(bitToConvert) {
+      if (bitToConvert) {
+        return "1 "
+      }
+      return "0 "
+    }(bit));
+  });
+}
+
 window.onload = function() {
   var ctx = $("#canvas")[0].getContext("2d");
   window.myLine = new Chart(ctx, config);
 };
-
-$SHOW_BINARY_SIGNAL = false;
 
 $(document).ready(function() {
   $("#show-signal").click(function() {
@@ -83,13 +103,16 @@ $(document).ready(function() {
       },
       success: function(data) {
         throb.stop();
-        $ARGUMENTS = data.arguments;
-        $VALUES = data.values;
+        $ARGUMENTS = data.simulatedSignal.arguments;
+        $VALUES = data.simulatedSignal.values;
         config.data.datasets[0].data = $VALUES;
         config.data.labels = $ARGUMENTS;
-        if($SHOW_BINARY_SIGNAL){
+        if($("#binary-signal-hide").hasClass("hidden")){
+          config.data.datasets[1].data = [];
+        }else{
           config.data.datasets[1].data = $BINARY_VALUES;
         }
+        updateSimulationResults(data);
         window.myLine.update();
       }
     });
@@ -97,19 +120,16 @@ $(document).ready(function() {
 
   $("#generate-binary-sequence").click(function() {
     $.ajax({
-      url: "/binary-sequence/new",
+      url: "/binary-sequence/new/" + $("#number-of-bits").val(),
       dataType: 'json',
       success: function(data) {
-        $("#binary-sequence").empty();
-        $.each(data.binarySequence, function(index, bit) {
-          $("#binary-sequence").append(function(bitToConvert) {
-            if (bitToConvert) {
-              return "1&nbsp;"
-            }
-            return "0&nbsp;"
-          }(bit));
-        });
+        if($("#binary-sequence-hide").hasClass("hidden")){
+          showBits(data.binarySequence,$BITS_TO_SHOW);
+        }else{
+          showBits(data.binarySequence,data.binarySequence.length);
+        }
         $BINARY_VALUES = data.binarySignal.values;
+        $SEQUENCE = data.binarySequence;
       }
     });
   });
@@ -133,17 +153,29 @@ $(document).ready(function() {
   $("#binary-signal-show").click(function() {
     config.data.datasets[1].data = $BINARY_VALUES;
     window.myLine.update();
-    $SHOW_BINARY_SIGNAL = true;
-    $(this).attr("hidden", "hidden");
-    $("#binary-signal-hide").removeAttr("hidden");
+    $(this).toggleClass("hidden");
+    $("#binary-signal-hide").toggleClass("hidden");
   });
 
   $("#binary-signal-hide").click(function() {
     config.data.datasets[1].data = [];
     window.myLine.update();
-    $SHOW_BINARY_SIGNAL = false;
-    $(this).attr("hidden", "hidden");
-    $("#binary-signal-show").removeAttr("hidden");
+    $(this).toggleClass("hidden");
+    $("#binary-signal-show").toggleClass("hidden");
   });
+
+  $("#binary-sequence-show").click(function() {
+    showBits($SEQUENCE,$SEQUENCE.length);
+    $(this).toggleClass("hidden");
+    $("#binary-sequence-hide").toggleClass("hidden");
+  });
+
+  $("#binary-sequence-hide").click(function() {
+    showBits($SEQUENCE,$BITS_TO_SHOW);
+    $(this).toggleClass("hidden");
+    $("#binary-sequence-show").toggleClass("hidden");
+  });
+
+  showBits($SEQUENCE,$BITS_TO_SHOW);
 
 });

@@ -8,9 +8,13 @@
     <meta name="description" content="website description"/>
     <meta name="keywords" content="website keywords, website keywords"/>
     <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script type="text/javascript" src="js/modernizr-1.5.min.js"></script>
     <script type="text/javascript" src="js/jquery.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
   </head>
   <body>
     <div id="main">
@@ -43,7 +47,7 @@
       <div id="site_content">
         <div id="content">
           <div id="figure">
-            <signal:simulation signalValues="${signal.values}" arguments="${signal.arguments}" binarySequence="${binarySequence}"/>
+            <signal:simulation simulationData="${simulationData}" binaryData="${binaryData}" numberOfBits="${binaryData.numberOfBits}"/>
           </div>
         </div>
       </div>

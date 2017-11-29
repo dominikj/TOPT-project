@@ -17,7 +17,7 @@ public class SimulationParametersForm {
 
     public SimulationParametersForm() {
         pulseType = Constants.PulseType.GAUSSIAN;
-        noiseSNR = 0;
+        noiseSNR = 12;
         isiRate = 0;
     }
 
